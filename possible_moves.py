@@ -1,10 +1,13 @@
 import copy
 
 
+
+
 class Square:
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0,y=0):
         self.x = x
         self.y = y
+
 
     def __deepcopy__(self, memodict={}):
 
@@ -26,7 +29,7 @@ class Board:
                            [' ',' ',' ','B',' ',' ',' ',' '],
                            [' ',' ',' ',' ',' ',' ',' ',' '],
                            [' ',' ',' ',' ',' ',' ',' ',' ']]
-        self.next_move_color = 'White'
+        self.is_next_move_white = True
         self.is_black_in_check = False
         self.is_white_in_check = False
         self.is_black_in_mate = False
@@ -40,8 +43,8 @@ class Board:
     def __setattr__(self, name, value):
         self.__dict__[name] = value
 
-    def print(self,message='') -> None:
-        print(message, self.next_move_color)
+    def print(self, message='') -> None:
+        print(message)
         for i in range(8):
             for j in range(8):
                 a = self.board_list[i][j].zfill(2)
@@ -68,12 +71,8 @@ class Board:
         y = square.y
         return self.board_list[x][y]
 
-    def get_color_of_piece(self, square: Square) -> str:
-        if self.get_piece(square).islower():
-            return 'Black'
-        if self.get_piece(square).isupper():
-            return 'White'
-        return ''
+    def is_color_of_piece_white(self, square: Square) -> bool:
+        return self.get_piece(square).isupper()
 
     def is_empty_square(self, square: Square) -> bool:
         return self.get_piece_name(square) == ' .' or self.get_piece_name(square) == '. ' or self.get_piece_name(square)==' '
@@ -87,74 +86,57 @@ class Board:
             new_board_list.append(self.board_list[i].reverse())
         self.board_list = new_board_list
 
+    def is_king_in_check(self) -> bool:
+           #print(original_board.next_move_color)
+        if self.is_next_move_white:
+            king_square = self.get_squares('K')[0]
+            q = copy.deepcopy(self)
+            #q.print()
+            board = king_possible_moves(q, king_square, True)
+            if board.get_squares('.k'): print('a');return True
 
-class Move:
-    def __init__(self, board: Board, start_square: Square, target_square: Square):
-        self.board = board
-        self.start_square = start_square
-        self.start_square = target_square
-        self.piece = board.get_piece_name(start_square)
-        if target_square:
-            self.is_captures = True
+            board = rook_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.r'):print('b'); return True
+
+            board = knight_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.n'): print('c');return True
+
+            board = bishop_possible_moves(copy.deepcopy(self), king_square, True)
+            if board.get_squares('.b'):print('d'); return True
+            board = queen_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.q'): print('e');return True
+            return False
+        #TODO pawn
         else:
-            self.is_captures = False
+            king_square = self.get_squares('k')[0]
+
+            board = king_possible_moves(copy.deepcopy(self), king_square, True)
+            if board.get_squares('.K'): print('a');return True
+
+            board = rook_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.R'): print('b');return True
+
+            board = knight_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.N'): print('c');return True
+
+            board = bishop_possible_moves(copy.deepcopy(self), king_square, True)
+            if board.get_squares('.B'): print('d');return True
+
+            board = queen_possible_moves(copy.deepcopy(self),king_square, True)
+            if board.get_squares('.Q'): print('e');return True
+
+            return False
 
 
-
-
-
-def is_king_in_check(original_board: Board) -> bool:
-    #print(original_board.next_move_color)
-    if original_board.next_move_color == 'White':
-        king_square = original_board.get_squares('K')[0]
-        q = copy.deepcopy(original_board)
-        #q.print()
-        board = king_possible_moves(q, king_square, True)
-        if board.get_squares('.k'): print('a');return True
-
-        board = rook_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.r'):print('b'); return True
-
-        board = knight_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.n'): print('c');return True
-
-        board = bishop_possible_moves(copy.deepcopy(original_board), king_square, True)
-        if board.get_squares('.b'):print('d'); return True
-        board = queen_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.q'): print('e');return True
-        return False
-    #TODO pawn
-    else:
-        king_square = original_board.get_squares('k')[0]
-
-        board = king_possible_moves(copy.deepcopy(original_board), king_square, True)
-        if board.get_squares('.K'): print('a');return True
-
-        board = rook_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.R'): print('b');return True
-
-        board = knight_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.N'): print('c');return True
-
-        board = bishop_possible_moves(copy.deepcopy(original_board), king_square, True)
-        if board.get_squares('.B'): print('d');return True
-
-        board = queen_possible_moves(copy.deepcopy(original_board),king_square, True)
-        if board.get_squares('.Q'): print('e');return True
-
-        return False
-
-
-def own_piece_capture_check(board: Board) -> Board:
-    for x in range(8):
-        for y in range(8):
-            if board.next_move_color == 'White':
-                if board.board_list[x][y].isupper():
-                    board.board_list[x][y] = board.board_list[x][y].replace('.', '')
-            else:
-                if board.board_list[x][y].islower():
-                    board.board_list[x][y] = board.board_list[x][y].replace('.', '')
-    return board
+    def own_piece_capture_check(self):
+        for x in range(8):
+            for y in range(8):
+                if self.is_next_move_white:
+                    if self.board_list[x][y].isupper():
+                        self.board_list[x][y] = self.board_list[x][y].replace('.', '')
+                else:
+                    if self.board_list[x][y].islower():
+                        self.board_list[x][y] = self.board_list[x][y].replace('.', '')
 
 
 def puts_own_king_in_check(board: Board, start_square: Square, target_square: Square) -> bool:
@@ -189,7 +171,7 @@ def is_move_legal(board: Board, square: Square, target_square: Square, king_chec
 
 
 def pawn_possible_moves(board: Board, square: Square, king_check = False) -> Board:
-    if board.next_move_color == 'Black':
+    if not board.is_next_move_white:
         board.flip()
         square.x = (8-square.x)%8
         square.y = (8-square.y)%8
@@ -201,8 +183,10 @@ def pawn_possible_moves(board: Board, square: Square, king_check = False) -> Boa
 
 def _pawn_captures_moves(board: Board, square: Square) -> Board:
     square.y -= 1
-    if square.is_inside_board() and board.get_color_of_piece(square):
-        pass
+    if square.is_inside_board() and (board.is_color_of_piece_white(square) == board.is_next_move_white):
+        piece = board.get_piece(square)
+
+        board.update()
 
 
 def _pawn_straight_moves(board: Board, square: Square) -> Board:
@@ -282,7 +266,7 @@ def king_possible_moves(board: Board, square: Square, king_check = False) -> Boa
                 is_move_legal(board,square, new_square, king_check)
     if not king_check:
         castles(board)
-        if board.next_move_color == 'White':
+        if board.is_next_move_white:
             board.white_long_castle = False
             board.white_short_castle = False
         else:
@@ -291,7 +275,7 @@ def king_possible_moves(board: Board, square: Square, king_check = False) -> Boa
     return board
 
 def castles(board: Board) -> Board:
-    if board.next_move_color == 'White':
+    if board.is_next_move_white:
         king_square = board.get_squares('K')[0]
         x = king_square.x
         y = king_square.y
@@ -345,7 +329,7 @@ def castles(board: Board) -> Board:
 def generate_possible_moves(board: Board, square: Square) -> Board:
     piece = board.get_piece(square)
     print(piece)
-    if (board.next_move_color == 'White' and piece.isupper()) or (board.next_move_color == 'Black' and piece.islower()):
+    if (board.is_next_move_white and piece.isupper()) or (not board.is_next_move_white and piece.islower()):
         piece = piece.lower()
         if piece == 'p':
             board = pawn_possible_moves(board, square)
