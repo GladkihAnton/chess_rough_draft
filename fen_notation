@@ -1,0 +1,86 @@
+def fen_to_board(fen: str):
+    fen_board = fen.split()[0].split('/')
+    fen_additional_info = fen.split()[1:]
+    board=[]
+
+    for fen_rows in fen_board:
+        rows = []
+        for fen_cell in fen_rows:
+            if fen_cell.isalpha():
+                rows.append(fen_cell)
+            else:
+                for empty_cell in range(int(fen_cell)):
+                    rows.append('')
+        board.append(rows)
+
+    if fen_additional_info[0] == 'w':
+        white_to_move = True
+
+    possible_castles = fen_additional_info[1] #TODO it has to be in one variable somehow
+    white_lcastle = 'Q' in possible_castles
+    white_scastle = 'K' in possible_castles
+    black_lcastle = 'q' in possible_castles
+    black_scastle = 'k' in possible_castles
+
+    if fen_additional_info[2] != '-': #returns position of a pawn if it moved 2 squares last turn, otherwise - None
+        all_rows = 'abcdefgh'
+        cell = fen_additional_info[2]
+        row = all_rows.find(cell[0])
+        file = int(cell[1]) - 1
+        en_passant = (row,file)
+    else:
+        en_passant = None
+
+    no_capture_moves = int(fen_additional_info[3]) #number of consecutive without capturing or moving a pawn
+
+    move_number = int(fen_additional_info[4])
+
+    return board
+
+"""
+variable "castles" by default has to contain all possible castles in current position regardless of what was played
+before in the game
+"""
+def board_to_fen(board:list, white_to_move=True, castles='default', en_passant=None, no_capture_moves=0, move_number=1):
+
+    fen_board = []
+    for row in board:
+        empty_count = 0
+        fen_row = ''
+        for cell in row:
+            if cell:
+                if empty_count != 0:
+                    fen_row += str(empty_count)
+                    empty_count = 0
+                fen_row += cell
+            else:
+                empty_count += 1
+        if empty_count != 0:
+            fen_row += str(empty_count)
+        fen_board.append(fen_row)
+    fen_board = '/'.join(fen_board)
+
+    fen_additional_info = []
+
+    fen_additional_info.append('w' if white_to_move else 'b')
+    fen_additional_info.append(possible_castles_check())
+
+    en_passant_normal_notation = ''
+    if en_passant:
+        all_rows = 'abcdefgh'
+        en_passant_normal_notation += str(all_rows[en_passant[0]])
+        en_passant_normal_notation += str(en_passant[1] + 1)
+    else:
+        en_passant_normal_notation = '-'
+    fen_additional_info.append(en_passant_normal_notation)
+
+    fen_additional_info.append(str(no_capture_moves))
+    fen_additional_info.append(str(move_number))
+    fen = fen_board + ' ' + ' '.join(fen_additional_info)
+    return fen
+
+
+def possible_castles_check():#TODO
+    return 'KQkq'
+b = fen_to_board('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1')
+print(board_to_fen(b,en_passant=(2,3)))
