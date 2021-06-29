@@ -13,8 +13,8 @@ def fen_to_board(fen: str):
                     rows.append('')
         board.append(rows)
 
-    if fen_additional_info[0] == 'w':
-        white_to_move = True
+    white_to_move = fen_additional_info[0] == 'w'
+
 
     possible_castles = fen_additional_info[1] #TODO it has to be in one variable somehow
     white_lcastle = 'Q' in possible_castles
@@ -27,7 +27,7 @@ def fen_to_board(fen: str):
         cell = fen_additional_info[2]
         row = all_rows.find(cell[0])
         file = int(cell[1]) - 1
-        en_passant = (row,file)
+        en_passant = (row, file)
     else:
         en_passant = None
 
